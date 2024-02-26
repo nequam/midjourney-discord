@@ -9,7 +9,7 @@ import {
   Message,
 } from "discord.js";
 #import { Midjourney, MidjourneyApi } from "midjourney";
-import { MidjourneyApi } from "midjourney";
+import { MidjourneyApi } from "@ymjir/midjourney-api";
 import { Midjourney } from "@ymjir/midjourney-api";
 import { BotConfig, BotConfigParam, DefaultBotConfig } from "./interfaces";
 
