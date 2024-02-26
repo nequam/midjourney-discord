@@ -1,4 +1,5 @@
-import { DefaultMJConfig, MJConfig, MJConfigParam } from "midjourney";
+#import { DefaultMJConfig, MJConfig, MJConfigParam } from "midjourney";
+import { DefaultMJConfig, MJConfig, MJConfigParam } from "@ymjir/midjourney-api";
 
 export interface BotConfig extends MJConfig {
   DavinciToken: string;

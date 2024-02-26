@@ -8,7 +8,8 @@ import {
   ChannelType,
   Message,
 } from "discord.js";
-import { Midjourney, MidjourneyApi } from "midjourney";
+#import { Midjourney, MidjourneyApi } from "midjourney";
+import { Midjourney, MidjourneyApi } from "@ymjir/midjourney-api";
 import { BotConfig, BotConfigParam, DefaultBotConfig } from "./interfaces";
 
 export class MidjourneyBot extends Midjourney {
