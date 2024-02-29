@@ -4,13 +4,13 @@ env:
   DOCKERHUB_USERNAME: erictik
   TAG: erictik/${{ github.event.repository.name }}:1.1.${{ github.run_number }}
   LATEST_TAG: erictik/${{ github.event.repository.name }}:latest
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - "main"
-    paths:
-      - "**.ts"
+# on:
+#  workflow_dispatch:
+#  push:
+#    branches:
+#      - "main"
+#    paths:
+#      - "**.ts"
 
 jobs:
   buildAndPush:

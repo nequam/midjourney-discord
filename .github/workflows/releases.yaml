@@ -1,13 +1,13 @@
 name: Node.js Package
 env:
   APPVERSION: v1.0.${{ github.run_number }}
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - "main"
-    paths:
-      - "**.ts"
+#on:
+#  workflow_dispatch:
+#  push:
+#    branches:
+#      - "main"
+#    paths:
+#      - "**.ts"
 jobs:
   publish-gpr:
     runs-on: ubuntu-latest
