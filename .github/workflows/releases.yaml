@@ -1,8 +1,8 @@
 name: Node.js Package
 env:
   APPVERSION: v1.0.${{ github.run_number }}
-#on:
-#  workflow_dispatch:
+on:
+  workflow_dispatch:
 #  push:
 #    branches:
 #      - "main"
