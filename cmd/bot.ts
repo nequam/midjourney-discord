@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { MidjourneyBot } from "../src/index";
+import { MidjourneyBot } from "../src";
 
 async function main() {
   const client = new MidjourneyBot({
