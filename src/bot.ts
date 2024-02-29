@@ -1,17 +1,18 @@
 import {
+  ApplicationCommandOptionType,
+  CacheType,
+  ChannelType,
   Client,
   GatewayIntentBits,
-  ApplicationCommandOptionType,
   Interaction,
-  CacheType,
-  TextChannel,
-  ChannelType,
   Message,
+  TextChannel,
 } from "discord.js";
- // import { Midjourney, MidjourneyApi } from "midjourney";
-
-import { Midjourney, MidjourneyApi } from "freezer-midjourney-api";
-import { BotConfig, BotConfigParam, DefaultBotConfig } from "./interfaces";
+/*
+ import { Midjourney, MidjourneyApi } from "midjourney";
+*/
+import {Midjourney} from "freezer-midjourney-api";
+import {BotConfig, BotConfigParam, DefaultBotConfig} from "./interfaces";
 
 export class MidjourneyBot extends Midjourney {
   client = new Client({
@@ -46,7 +47,7 @@ export class MidjourneyBot extends Midjourney {
   async onInteraction(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
     if (interaction.commandName === "oh_imagine") {
-      this.ImagineCmd(interaction);
+      await this.ImagineCmd(interaction);
     }
   }
 
@@ -86,8 +87,7 @@ export class MidjourneyBot extends Midjourney {
   async getMessage(channelId: string, messageId: string) {
     const channel = await this.client.channels.fetch(channelId);
     if (!channel || channel.type !== ChannelType.GuildText) return;
-    const message = await channel.messages.fetch(messageId);
-    return message;
+    return await channel.messages.fetch(messageId);
   }
 
   async upscale(index: 1 | 2 | 3 | 4, channelId: string, messageID: string) {
@@ -146,28 +146,28 @@ export class MidjourneyBot extends Midjourney {
     const channelId = message.channelId;
     switch (option) {
       case "v1":
-        this.variation(1, channelId, message.reference.messageId);
+        await this.variation(1, channelId, message.reference.messageId);
         break;
       case "v2":
-        this.variation(2, channelId, message.reference.messageId);
+        await this.variation(2, channelId, message.reference.messageId);
         break;
       case "v3":
-        this.variation(3, channelId, message.reference.messageId);
+        await this.variation(3, channelId, message.reference.messageId);
         break;
       case "v4":
-        this.variation(4, channelId, message.reference.messageId);
+        await this.variation(4, channelId, message.reference.messageId);
         break;
       case "u1":
-        this.upscale(1, channelId, message.reference.messageId);
+        await this.upscale(1, channelId, message.reference.messageId);
         break;
       case "u2":
-        this.upscale(2, channelId, message.reference.messageId);
+        await this.upscale(2, channelId, message.reference.messageId);
         break;
       case "u3":
-        this.upscale(3, channelId, message.reference.messageId);
+        await this.upscale(3, channelId, message.reference.messageId);
         break;
       case "u4":
-        this.upscale(4, channelId, message.reference.messageId);
+        await this.upscale(4, channelId, message.reference.messageId);
         break;
     }
   }
