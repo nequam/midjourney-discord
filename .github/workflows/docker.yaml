@@ -6,11 +6,11 @@ env:
   LATEST_TAG: erictik/${{ github.event.repository.name }}:latest
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "main"
-    paths:
-      - "**.ts"
+#  push:
+#    branches:
+#      - "main"
+#    paths:
+#      - "**.ts"
 
 jobs:
   buildAndPush:
