@@ -72,7 +72,7 @@ async ImagineCmdAI(interaction: Interaction<CacheType>) {
     this.log("prompt", newPrompt);
 
     if (newPrompt!=prompt) {
-      interaction.followUp("The new prompt is " + newPrompt);
+      interaction.followUp("The old Prompt: " + prompt + "\nThe new prompt is " + newPrompt);
     }
     this.MJApi.config.ChannelId = interaction.channelId;
 
