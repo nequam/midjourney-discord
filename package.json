@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/erictik/midjourney-discord#readme",
   "devDependencies": {
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.4.5",
     "nodemon": "^2.0.22",
     "ts-node": "^10.9.1",
     "tsx": "^3.12.7",
@@ -42,6 +42,7 @@
     "discord.js": "^14.9.0",
     "freezer-midjourney-api": "latest",
     "node-fetch": "2.6.11",
+    "openai": "^4.28.4",
     "socks-proxy-agent": "^8.0.1"
   }
 }

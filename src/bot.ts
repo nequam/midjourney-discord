@@ -14,6 +14,8 @@ import {
 import {Midjourney} from "freezer-midjourney-api";
 import {BotConfig, BotConfigParam, DefaultBotConfig} from "./interfaces";
 
+import {OpenAICommunicator} from "./openAICommunicator";
+
 export class MidjourneyBot extends Midjourney {
   client = new Client({
     intents: [
@@ -26,6 +28,7 @@ export class MidjourneyBot extends Midjourney {
     ],
   });
   public config: BotConfig;
+  private communicator: OpenAICommunicator;
 
   constructor(defaults: BotConfigParam) {
     const config = {
@@ -34,6 +37,7 @@ export class MidjourneyBot extends Midjourney {
     };
     super(config);
     this.config = config;
+    this.communicator = new OpenAICommunicator();
   }
 
   async start() {
@@ -49,8 +53,40 @@ export class MidjourneyBot extends Midjourney {
     if (interaction.commandName === "oh_imagine") {
       await this.ImagineCmd(interaction);
     }
+    if (interaction.commandName === "ai_imagine") {
+      await this.ImagineCmdAI(interaction);
+    }
   }
+async ImagineCmdAI(interaction: Interaction<CacheType>) {
+    if (!interaction.isChatInputCommand()) return;
+    const prompt = interaction.options.getString("prompt");
+    if (prompt === null) {
+    return;
+    }
+    this.log("prompt", prompt);
 
+    interaction.reply("Talking to another AI, please wait a moment...");
+
+    const newPrompt = await this.communicator.sendMessage(prompt);
+
+    this.log("prompt", newPrompt);
+
+    if (newPrompt!=prompt) {
+      interaction.followUp("The new prompt is " + newPrompt);
+    }
+    this.MJApi.config.ChannelId = interaction.channelId;
+
+    const httpStatus = await this.MJApi.ImagineApi(newPrompt);
+
+    if (httpStatus !== 204) {
+      await interaction.followUp("Request has failed; please try later");
+    } else {
+      await interaction.followUp(
+          "Your image is being prepared, please wait a moment..."
+      );
+    }
+
+}
   async ImagineCmd(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
     const prompt = interaction.options.getString("prompt");
@@ -78,6 +114,19 @@ export class MidjourneyBot extends Midjourney {
           name: "prompt",
           type: ApplicationCommandOptionType.String,
           description: "The prompt for the AI to imagine",
+          required: true,
+        },
+      ],
+    });
+
+    await this.client.application?.commands.create({
+      name: "ai_imagine",
+      description: "This command is a wrapper around ChatGPT and MidJoruneyAI",
+      options: [
+        {
+          name: "prompt",
+          type: ApplicationCommandOptionType.String,
+          description: "The prompt for the AI to expand for midjourney",
           required: true,
         },
       ],
