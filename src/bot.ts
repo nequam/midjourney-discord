@@ -13,8 +13,9 @@ import {
 */
 import {Midjourney} from "freezer-midjourney-api";
 import {BotConfig, BotConfigParam, DefaultBotConfig} from "./interfaces";
-
-import {OpenAICommunicator} from "./openAICommunicator";
+import {OpenAICommunicator} from "./OpenAICommunicator";
+import { createDataStore } from './DataStoreFactory';
+import { IDataStore } from './IDataStore';
 
 export class MidjourneyBot extends Midjourney {
   client = new Client({
@@ -28,7 +29,10 @@ export class MidjourneyBot extends Midjourney {
     ],
   });
   public config: BotConfig;
+  // @ts-ignore
   private communicator: OpenAICommunicator;
+  private dataStore: IDataStore;
+
 
   constructor(defaults: BotConfigParam) {
     const config = {
@@ -37,10 +41,13 @@ export class MidjourneyBot extends Midjourney {
     };
     super(config);
     this.config = config;
-    this.communicator = new OpenAICommunicator();
+    this.dataStore = createDataStore();
   }
 
   async start() {
+
+    await this.dataStore.init();
+    this.communicator = new OpenAICommunicator(this.dataStore);
     this.client.on("ready", this.onReady.bind(this));
     this.client.on("messageCreate", this.onMessage.bind(this));
     this.client.on("interactionCreate", this.onInteraction.bind(this));
@@ -48,15 +55,30 @@ export class MidjourneyBot extends Midjourney {
     await this.client.login(this.config.DavinciToken);
     this.log("Bot started");
   }
+
   async onInteraction(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
-    if (interaction.commandName === "oh_imagine") {
-      await this.ImagineCmd(interaction);
+    switch (interaction.commandName) {
+      case "oh_imagine":
+        await this.ImagineCmd(interaction);
+        break;
+      case "ai_imagine":
+        await this.ImagineCmdAI(interaction);
+        break;
+      case "ai_reset":
+        await this.ResetAI(interaction);
+        break;
     }
-    if (interaction.commandName === "ai_imagine") {
-      await this.ImagineCmdAI(interaction);
-    }
+
   }
+
+  async ResetAI(interaction: Interaction<CacheType>) {
+    if (!interaction.isChatInputCommand()) return;
+    interaction.reply("Resetting your thread.");
+
+    await this.communicator.resetAI(interaction.user.id.toString());
+  }
+
 async ImagineCmdAI(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
     const prompt = interaction.options.getString("prompt");
@@ -67,12 +89,14 @@ async ImagineCmdAI(interaction: Interaction<CacheType>) {
 
     interaction.reply("Talking to another AI, please wait a moment...");
 
-    const newPrompt = await this.communicator.sendMessage(prompt);
+    const newPrompt = await this.communicator.sendMessage(interaction.user.id.toString(), prompt);
 
     this.log("prompt", newPrompt);
 
     if (newPrompt!=prompt) {
       interaction.followUp("The old Prompt: " + prompt + "\nThe new prompt is " + newPrompt);
+    } else {
+      interaction.followUp("No Change");
     }
     this.MJApi.config.ChannelId = interaction.channelId;
 
@@ -131,6 +155,12 @@ async ImagineCmdAI(interaction: Interaction<CacheType>) {
         },
       ],
     });
+
+    await this.client.application?.commands.create({
+      name: "ai_reset",
+      description: "Reset the thread that you are on.",
+    });
+
   }
 
   async getMessage(channelId: string, messageId: string) {
