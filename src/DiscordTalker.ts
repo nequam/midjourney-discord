@@ -26,7 +26,8 @@ export class DiscordTalker {
     }
 
     async sendImageResponse(prompt: string): Promise<void> {
-        await this.sendResponse("Requesting: " + prompt);
+        // await this.sendResponse("Talker Requesting: " + prompt);
+        // await this.bot.MJApi.
         await this.bot.SendImageToMidJourney(prompt);
     }
 

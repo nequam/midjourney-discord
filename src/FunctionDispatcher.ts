@@ -36,6 +36,7 @@ export class FunctionDispatcher {
         const prompt = args.prompt;
         await this.Talker.sendResponse("Requesting: " + prompt);
         await this.Talker.sendImageResponse(prompt)
+        return {status: "ok"};
     }
 
     async image_fail(args:any) : Promise<any> {
@@ -56,7 +57,7 @@ export class FunctionDispatcher {
         if (!rVal) {
            rVal= await this.DataStore.getData(args.token, "global")
         }
-        return rVal;
+        return {token: rVal};
     }
 
     async delete_token(args:any) : Promise<any> {
@@ -66,7 +67,7 @@ export class FunctionDispatcher {
             userId="global";
         }
         await this.DataStore.deleteData(args.token, userId);
-        return "ok";
+        return {status: "ok"};
     }
 
     async store_token(args: any) : Promise<any> {
@@ -77,10 +78,11 @@ export class FunctionDispatcher {
             userId = "global";
         }
         await this.DataStore.storeData(args.token, userId, args.value);
+        return {status: "ok"}
     }
 
     async analyze_prompt(arg: any) : Promise<any> {
         const analysis= this.Talker.analyzePrompt(arg.prompt);
-        await  this.Talker.sendResponse("Tha analysis is: " + analysis);
+        return {analysis: analysis}
     }
 }

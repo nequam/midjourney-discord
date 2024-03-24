@@ -19,6 +19,7 @@ import { createDataStore } from './DataStoreFactory';
 import { IDataStore } from './IDataStore';
 import {DiscordTalker} from "./DiscordTalker";
 
+ const { v4: uuidv4 } = require('uuid');
 export class MidjourneyBot extends Midjourney {
   client = new Client({
     intents: [
@@ -150,20 +151,30 @@ async ImagineCmdAI(interaction: Interaction<CacheType>) {
     }
     */
 }
-
+  async sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
 async SendImageToMidJourney(prompt: string) : Promise<number>
 {
     this.MJApi.config.ChannelId = this.config.ChannelId;
-    return await this.MJApi.ImagineApi(prompt);
-
-
+    let status =  1;
+    let tries=10;
+    while (tries-- > 0 ) {
+      status = await this.MJApi.ImagineApi(prompt);
+      if (status === 204) {
+        return status;
+      }
+      await this.sleep(1000);
+    }
+    return status;
 }
 
 async AnalyzePrompt(prompt: string) {
+
   this.MJApi.config.ChannelId = this.config.ChannelId;
   return await this.MJApi.ShortenApi(prompt);
-}
+  }
 
   async ImagineCmd(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
