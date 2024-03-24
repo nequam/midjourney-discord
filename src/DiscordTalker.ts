@@ -1,12 +1,5 @@
 import {
-    ApplicationCommandOptionType,
-    CacheType,
-    ChannelType,
-    Client,
-    GatewayIntentBits,
-    Interaction,
-    Message,
-    TextChannel,
+    Interaction
 } from "discord.js";
 
 import {MidjourneyBot} from "./bot";
@@ -33,7 +26,8 @@ export class DiscordTalker {
     }
 
     async sendImageResponse(prompt: string): Promise<void> {
-       await this.bot.SendImageToMidJourney(prompt);
+        await this.sendResponse("Requesting: " + prompt);
+        await this.bot.SendImageToMidJourney(prompt);
     }
 
     getUserId() : string
