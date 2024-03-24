@@ -40,7 +40,14 @@ export class FunctionDispatcher {
 
     async image_fail(args:any) : Promise<any> {
         // logic to handle image failure
-        await this.Talker.sendResponse(args.Failure_message_detail);
+        let failure = args.failure_message_detail;
+        if (failure === undefined) {
+            failure = args.failure_message;
+        }
+        if (failure==undefined) {
+            failure= "I'm sorry, I was unable to generate an image for that prompt.  Please try again.";
+        }
+        await this.Talker.sendResponse(failure);
     }
 
     async get_token(args:any) : Promise<any> {
@@ -49,6 +56,7 @@ export class FunctionDispatcher {
         if (!rVal) {
            rVal= await this.DataStore.getData(args.token, "global")
         }
+        return rVal;
     }
 
     async delete_token(args:any) : Promise<any> {
