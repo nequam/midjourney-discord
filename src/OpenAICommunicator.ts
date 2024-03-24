@@ -106,10 +106,29 @@ export class OpenAICommunicator {
                 threadId = thread.id;
                 await this.dataStore.createThread(user, threadId);
             }
-            let rThread = null;
+
             try {
                 console.log("Checking thread:", threadId)
-                let rThread = await this.openai.beta.threads.retrieve(threadId);
+                const tThread=await this.openai.beta.threads.retrieve(threadId);
+
+                let runs = await this.openai.beta.threads.runs.list(tThread.id)
+
+                while (true) {
+                    for (let run of runs.data) {
+                        if (run.status !== 'failed' && run.status !== 'completed' && run.status !== 'expired') {
+                            console.log("Thread is running.  Wiping it.")
+                            await this.dataStore.resetThread(user);
+                            threadId = null;
+                            break;
+                        }
+                    }
+
+                    if (threadId==null || !runs.hasNextPage()) break;
+                    runs = await runs.getNextPage();
+                }
+                if (threadId==null) continue;
+
+
             } catch {
                 console.error(`Thread ID ${threadId} is invalid: `);
                 await this.dataStore.resetThread(user);
@@ -126,9 +145,9 @@ export class OpenAICommunicator {
             return messageInput;
         }
 
-        var dispatcher = new FunctionDispatcher(talker, this.dataStore, this);
+        let dispatcher = new FunctionDispatcher(talker, this.dataStore, this);
 
-        const message = await this.openai.beta.threads.messages.create(
+        await this.openai.beta.threads.messages.create(
             threadId,
             {
                 role: 'user',
@@ -143,7 +162,7 @@ export class OpenAICommunicator {
             }
         );
 
-        var runValue = await this.openai.beta.threads.runs.retrieve(
+        let runValue = await this.openai.beta.threads.runs.retrieve(
             threadId,
             run.id
         );
@@ -212,7 +231,7 @@ export class OpenAICommunicator {
     }
 
     startCleanUpProcess() {
-        this.cleanUpInactiveThreads("");
+        this.cleanUpInactiveThreads("").then(r => console.log("Clean up process started"));
         setInterval(() => this.cleanUpInactiveThreads(""), 86400000); // 86400000 milliseconds in 24 hours
     }
 
@@ -243,7 +262,7 @@ export class OpenAICommunicator {
         if (threadIds.length > 0) {
             // Get the last threadId of the current page to use as the starting point for the next page
             const nextStartingThread = threadIds[threadIds.length - 1];
-            this.cleanUpInactiveThreads(nextStartingThread);
+            await this.cleanUpInactiveThreads(nextStartingThread);
         }
     }
 
