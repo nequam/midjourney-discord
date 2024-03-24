@@ -670,19 +670,6 @@ formdata-node@^4.3.2:
     node-domexception "1.0.0"
     web-streams-polyfill "4.0.0-beta.3"
 
-freezer-midjourney-api@latest:
-  version "4.0.6"
-  resolved "https://registry.npmjs.org/freezer-midjourney-api/-/freezer-midjourney-api-4.0.6.tgz"
-  integrity sha512-fpDrGa9YyZ4688PuwiMQZF92aMy2/ststJYSHdUl4gw0XpRQKw2R4UqCRRm4NNIZ19fGgjQZKWA5fhXx9sHNvA==
-  dependencies:
-    "@huggingface/inference" "^2.5.0"
-    async "^3.2.4"
-    isomorphic-ws "^5.0.0"
-    semiver "^1.1.0"
-    snowyflake "^2.0.0"
-    tslib "^2.5.0"
-    ws "^8.13.0"
-
 fs-constants@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/fs-constants/-/fs-constants-1.0.0.tgz"
@@ -963,6 +950,19 @@ md5@^2.3.0:
     charenc "0.0.2"
     crypt "0.0.2"
     is-buffer "~1.1.6"
+
+midjourney@latest:
+  version "4.3.17"
+  resolved "https://registry.npmjs.org/midjourney/-/midjourney-4.3.17.tgz"
+  integrity sha512-M068gWy+tVGAQTY9P6TxfEglGl3LCBWaDu3qUlUOBsqzCwcbsFJXsKit4HJUP3G1OkIVZen7RWl+67N8/aE2+A==
+  dependencies:
+    "@huggingface/inference" "^2.5.0"
+    async "^3.2.4"
+    isomorphic-ws "^5.0.0"
+    semiver "^1.1.0"
+    snowyflake "^2.0.0"
+    tslib "^2.5.0"
+    ws "^8.13.0"
 
 mime-db@1.52.0:
   version "1.52.0"

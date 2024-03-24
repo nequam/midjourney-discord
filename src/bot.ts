@@ -11,11 +11,13 @@ import {
 /*
  import { Midjourney, MidjourneyApi } from "midjourney";
 */
-import {Midjourney} from "freezer-midjourney-api";
+
+import {Midjourney} from "midjourney";
 import {BotConfig, BotConfigParam, DefaultBotConfig} from "./interfaces";
 import {OpenAICommunicator} from "./OpenAICommunicator";
 import { createDataStore } from './DataStoreFactory';
 import { IDataStore } from './IDataStore';
+import {DiscordTalker} from "./DiscordTalker";
 
 export class MidjourneyBot extends Midjourney {
   client = new Client({
@@ -48,6 +50,7 @@ export class MidjourneyBot extends Midjourney {
 
     await this.dataStore.init();
     this.communicator = new OpenAICommunicator(this.dataStore);
+    await this.communicator.init()
     this.client.on("ready", this.onReady.bind(this));
     this.client.on("messageCreate", this.onMessage.bind(this));
     this.client.on("interactionCreate", this.onInteraction.bind(this));
@@ -68,7 +71,17 @@ export class MidjourneyBot extends Midjourney {
       case "ai_reset":
         await this.ResetAI(interaction);
         break;
+case "ai_store":
+          await this.StoreAI(interaction);
+            break;
     }
+
+  }
+
+  async StoreAI(interaction: Interaction<CacheType>) {
+    if (!interaction.isChatInputCommand()) return;
+
+    await interaction.reply("Working on this command..");
 
   }
 
@@ -78,25 +91,51 @@ export class MidjourneyBot extends Midjourney {
 
     await this.communicator.resetAI(interaction.user.id.toString());
   }
+   private splitIntoChunks(str: string, chunkSize: number): string[] {
+    const byteCount = Buffer.byteLength(str, 'utf8');
+    let startIndex = 0;
+    const chunks = [];
 
+    while (startIndex < byteCount) {
+      let endIndex = startIndex + chunkSize;
+      if (endIndex > byteCount) endIndex = byteCount;
+      const chunk = Buffer.from(str, 'utf8').slice(startIndex, endIndex).toString('utf8');
+      chunks.push(chunk);
+      startIndex = endIndex;
+    }
+
+    return chunks;
+  }
 async ImagineCmdAI(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
+    const talker = new DiscordTalker(interaction,this);
     const prompt = interaction.options.getString("prompt");
     if (prompt === null) {
     return;
     }
     this.log("prompt", prompt);
 
-    interaction.reply("Talking to another AI, please wait a moment...");
+    talker.sendResponse("Talking to another AI, please wait a moment...");
 
-    const newPrompt = await this.communicator.sendMessage(interaction.user.id.toString(), prompt);
+    const Prompt = await this.communicator.sendMessage(interaction.user.id.toString(), prompt, talker);
+
+    talker.sendResponse(Prompt);
+
+/*
 
     this.log("prompt", newPrompt);
 
-    if (newPrompt!=prompt) {
-      interaction.followUp("The old Prompt: " + prompt + "\nThe new prompt is " + newPrompt);
+   //await interaction.followUp("The old Prompt: " + prompt + "\nThe new prompt is " + newPrompt);
+
+  if (newPrompt!=prompt) {
+      const message = "The old Prompt: " + prompt + "\nThe new prompt is " + newPrompt;
+      const chunks = this.splitIntoChunks(message, 1500);
+
+      for (const chunk of chunks) {
+        await interaction.followUp(chunk);
+      }
     } else {
-      interaction.followUp("No Change");
+      await interaction.followUp("No Change");
     }
     this.MJApi.config.ChannelId = interaction.channelId;
 
@@ -109,8 +148,23 @@ async ImagineCmdAI(interaction: Interaction<CacheType>) {
           "Your image is being prepared, please wait a moment..."
       );
     }
+    */
+}
+
+
+async SendImageToMidJourney(prompt: string) : Promise<number>
+{
+    this.MJApi.config.ChannelId = this.config.ChannelId;
+    return await this.MJApi.ImagineApi(prompt);
+
 
 }
+
+async AnalyzePrompt(prompt: string) {
+  this.MJApi.config.ChannelId = this.config.ChannelId;
+  return await this.MJApi.ShortenApi(prompt);
+}
+
   async ImagineCmd(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
     const prompt = interaction.options.getString("prompt");
@@ -130,6 +184,8 @@ async ImagineCmdAI(interaction: Interaction<CacheType>) {
   }
 
   async onReady() {
+    let commands = await this.client.application?.commands.fetch();
+    console.log(commands?.map(cmd => cmd.name));
     await this.client.application?.commands.create({
       name: "oh_imagine",
       description: "This command is a wrapper of MidJourneyAI",
@@ -152,14 +208,46 @@ async ImagineCmdAI(interaction: Interaction<CacheType>) {
           type: ApplicationCommandOptionType.String,
           description: "The prompt for the AI to expand for midjourney",
           required: true,
-        },
+        },{
+          name: "iterations",
+          type: ApplicationCommandOptionType.Integer,
+          description: "The number of iterations to run",
+          required: false,
+        }
       ],
     });
+
+    await this.client.application?.commands.create({
+      name: "ai_store",
+      description: "Communicate with peristent memory behind the AI",
+      options: [
+        {
+          name: "name",
+          type: ApplicationCommandOptionType.String,
+          description: "Name of token",
+          required: true,
+        },{
+          name: "value",
+          type: ApplicationCommandOptionType.String,
+          description: "Value for the token",
+          required: false,
+        },{
+          name: "global",
+          type: ApplicationCommandOptionType.Boolean,
+          description: "Should everyone get this value or just you.",
+          required: false
+        }
+      ],
+    });
+
 
     await this.client.application?.commands.create({
       name: "ai_reset",
       description: "Reset the thread that you are on.",
     });
+
+    commands = await this.client.application?.commands.fetch();
+    console.log(commands?.map(cmd => cmd.name));
 
   }
 

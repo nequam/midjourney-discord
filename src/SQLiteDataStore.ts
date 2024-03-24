@@ -11,15 +11,22 @@ export class SQLiteDataStore implements IDataStore {
             filename: process.env.DATABASE_FILENAME || 'database.db',
             driver: sqlite3.Database,
         });
-            await this.db.exec(`CREATE TABLE IF NOT EXISTS threads (
-      userId TEXT PRIMARY KEY,
-      threadId TEXT,
-      creationDate TEXT,
-      active BOOLEAN
-    )`);
+            await this.db.exec(`CREATE TABLE IF NOT EXISTS main.threads
+                                (
+                                    userId       TEXT PRIMARY KEY,
+                                    threadId     TEXT,
+                                    creationDate TEXT,
+                                    active       BOOLEAN
+                                )`);
 // Create an index on the threadId column for faster lookups
-            await this.db.exec('CREATE INDEX IF NOT EXISTS idx_threadId ON threads (threadId);');
-
+            await this.db.exec(`CREATE INDEX IF NOT EXISTS main.idx_threadId ON threads (threadId);`);
+            await this.db.exec(`CREATE TABLE IF NOT EXISTS main.datastore
+                                (
+                                    token TEXT collate NOCASE not null,
+                                    user  TEXT                not null,
+                                    value TEXT,
+                                    CONSTRAINT datastore_pk PRIMARY KEY (token, user)
+                                ) `);
         }
 
     async createThread(userId: string, threadId: string): Promise<void> {
@@ -64,6 +71,22 @@ export class SQLiteDataStore implements IDataStore {
         const statement = `UPDATE threads SET active = ? WHERE threadId = ?`;
         await this.db.run(statement, false, threadId);
     }
+    async storeData(token: string, user: string, value: string): Promise<void> {
+        const statement = `INSERT INTO datastore (token, user, value)
+                       VALUES (?, ?, ?)
+                       ON CONFLICT(token, user) DO UPDATE SET
+                       value=excluded.value;`;
+        await this.db.run(statement, token, user, value);
+    }
+    async getData(token: string, user: string): Promise<string | null> {
+        const statement = `SELECT value FROM datastore WHERE token = ? AND user = ?`;
+        const row = await this.db.get(statement, token, user);
+        return row ? row.value : null;
+    }
 
+    async deleteData(token: string, user: string): Promise<void> {
+        const statement = `DELETE FROM datastore WHERE token = ? AND user = ?`;
+        await this.db.run(statement, token, user);
+    }
 
 }

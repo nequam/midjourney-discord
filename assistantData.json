@@ -1,0 +1,132 @@
+{
+    "Name" : "MidJourney Auto Assistant",
+    "Functions": [
+        {
+            "name": "run_prompt",
+            "description": "Prompt to be sent to MidJourney",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "The new prompt to use"
+                    }
+                },
+                "required": [
+                    "prompt"
+                ]
+            }
+        },
+        {
+            "name": "image_fail",
+            "description": "Called to describe the reason why a prompt could be generated",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "failure_message": {
+                        "type": "string",
+                        "description": "Brief description of message failure"
+                    },
+                    "failure_message_detail": {
+                        "type": "string",
+                        "description": "A detailed reason for the failure"
+                    },
+                    "reason_code": {
+                        "enum": [
+                            "Midjourney TOS",
+                            "OpenAI TOS"
+                        ]
+                    }
+                },
+                "required": [
+                    "failure_message",
+                    "failure_message_detail",
+                    "reason_code"
+                ]
+            }
+        },
+        {
+            "name": "get_token",
+            "description": "Used to get the value of a token",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "description": "The token value that we are looking for"
+                    }
+                },
+                "required": [
+                    "token"
+                ]
+            }
+        },
+        {
+            "name": "delete_token",
+            "description": "Used to delete a token from persistent storage",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "description": "The token to delete"
+                    },
+                    "level": {
+                        "enum": [
+                            "user",
+                            "global"
+                        ]
+                    }
+                },
+                "required": [
+                    "token"
+                ]
+            }
+        },
+        {
+            "name": "store_token",
+            "description": "Store a token into persistent storage",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "description": "The name of the token"
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "The value of the token"
+                    },
+                    "level": {
+                        "enum": [
+                            "user",
+                            "global"
+                        ]
+                    }
+                },
+
+                "required": [
+                    "token",
+                    "value"
+                ]
+            }
+        },
+        {
+            "name": "analyze_prompt",
+            "description": "Used to send a prompt to Midjourney for analysis",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "The prompt for keyword analysys"
+                    }
+                },
+                "required": [
+                    "prompt"
+                ]
+            }
+        }
+    ],
+    "Instructions": "instructions.txt"
+}

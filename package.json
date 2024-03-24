@@ -39,9 +39,9 @@
   },
   "dependencies": {
     "@types/node-fetch": "^2.6.4",
+    "midjourney": "latest",
     "axios": "^1.6.8",
     "discord.js": "^14.9.0",
-    "freezer-midjourney-api": "latest",
     "node-fetch": "2.6.11",
     "openai": "^4.28.4",
     "socks-proxy-agent": "^8.0.1",

@@ -1,6 +1,6 @@
 //import { DefaultMJConfig, MJConfig, MJConfigParam } from "midjourney";
 
-import { DefaultMJConfig, MJConfig, MJConfigParam } from "freezer-midjourney-api";
+import { DefaultMJConfig, MJConfig, MJConfigParam } from "midjourney";
 
 export interface BotConfig extends MJConfig {
   DavinciToken: string;

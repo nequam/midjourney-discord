@@ -2,6 +2,10 @@ import {OpenAI} from "openai";
 import {Threads} from "openai/resources/beta";
 import MessageContentText = Threads.MessageContentText;
 import {IDataStore} from "./IDataStore";
+import fs from 'fs/promises';
+import {RequiredActionFunctionToolCall} from "openai/resources/beta/threads";
+import {DiscordTalker} from "./DiscordTalker";
+import {FunctionDispatcher} from "./FunctionDispatcher";
 
 require('dotenv').config();
 
@@ -18,6 +22,62 @@ export class OpenAICommunicator {
         this.openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
     }
 
+    async init() {
+        const assistantData = JSON.parse(await fs.readFile('assistantData.json', 'utf8'));
+        const { Name, Functions, Instructions } = assistantData;
+
+        // Step 2: Get the instructions from the referred file
+        const instructionsContent = await fs.readFile(Instructions, 'utf8');
+
+        const formattedFunctions = Functions.map((fn: any) => ({
+            "type": "function",
+            "function": fn // Assuming fn is already a correctly formatted object
+        }));
+
+
+        let myAssistant;
+        try {
+            const myAssistants = await this.openai.beta.assistants.list({
+                order: "desc",
+                limit: 20
+            });
+
+            // Find assistant by name
+            myAssistant = myAssistants.data.find(assistant => assistant.name === Name);
+
+            // Step 4: If the assistant is found, check if updates are needed
+            if (myAssistant) {
+
+                // Check if instructions match
+                const instructionsMatch = (myAssistant.instructions?.trim() ?? "") === instructionsContent.trim();
+                // Check if tools match (you will need to define your own logic for matching functions and tools correctly)
+                const toolsMatch = JSON.stringify(myAssistant.tools.sort()) === JSON.stringify(Functions.sort());
+                if (!instructionsMatch || !toolsMatch) {
+                    // Update the assistant
+                    myAssistant = await this.openai.beta.assistants.update(myAssistant.id, {
+                        instructions: instructionsContent,
+                        tools: formattedFunctions
+                    });
+                }
+            } else {
+                // Step 5: If no assistant is found, create it
+                myAssistant = await this.openai.beta.assistants.create({
+                    instructions: instructionsContent,
+                    name: Name,
+                    tools: formattedFunctions,
+                    model: this.model,
+                });
+            }
+        } catch (error) {
+            console.error('An error occurred:', error);
+            process.exit(1); // Exit with a non-zero error code to indicate failure
+        }
+
+        this.assistant=myAssistant.id;
+
+        console.log('Assistant Processed:', myAssistant);
+    }
+
 
     async sleep(ms: number) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -31,7 +91,7 @@ export class OpenAICommunicator {
         await this.dataStore.resetThread(user);
     }
 
-    async sendMessage(user: string, messageInput: string): Promise<string> {
+    async sendMessage(user: string, messageInput: string, talker: DiscordTalker): Promise<string> {
         let n: number;
         let threadId: string | null = null;
         // Retry 5 times to get a valid thread ID
@@ -66,6 +126,7 @@ export class OpenAICommunicator {
             return messageInput;
         }
 
+        var dispatcher = new FunctionDispatcher(talker, this.dataStore, this);
 
         const message = await this.openai.beta.threads.messages.create(
             threadId,
@@ -96,7 +157,35 @@ export class OpenAICommunicator {
                 break;
             }
 
-            await this.sleep(2000);
+            if (runValue.status=="requires_action")
+            {
+
+                const required_action = runValue.required_action
+                const required_tools: Array<RequiredActionFunctionToolCall> | undefined = required_action?.submit_tool_outputs.tool_calls
+
+                if (required_tools) {
+
+                    let tool_output_items = []
+                    for(let rtool of required_tools) {
+
+                        const function_name = rtool.function.name
+                        const tool_args = JSON.parse(rtool.function.arguments)
+
+                        console.log("-", function_name, tool_args)
+
+                        let tool_output = dispatcher.Dispatch(function_name, tool_args)
+
+                        tool_output_items.push({
+                            tool_call_id: rtool.id,
+                            output: JSON.stringify(tool_output)
+                        })
+
+                    }
+                    await this.openai.beta.threads.runs.submitToolOutputs(threadId, run.id, { tool_outputs: tool_output_items });
+                }
+            }
+
+            await this.sleep(1000);
 
             runValue = await this.openai.beta.threads.runs.retrieve(
                 threadId,
@@ -126,6 +215,9 @@ export class OpenAICommunicator {
         this.cleanUpInactiveThreads("");
         setInterval(() => this.cleanUpInactiveThreads(""), 86400000); // 86400000 milliseconds in 24 hours
     }
+
+
+
 
     async cleanUpUnknownThreads() {
 
