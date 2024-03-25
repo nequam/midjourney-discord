@@ -45,7 +45,7 @@ export class FunctionDispatcher {
         if (failure === undefined) {
             failure = args.failure_message;
         }
-        if (failure==undefined) {
+        if (failure === undefined) {
             failure= "I'm sorry, I was unable to generate an image for that prompt.  Please try again.";
         }
         await this.Talker.sendResponse(failure);
@@ -67,6 +67,7 @@ export class FunctionDispatcher {
             userId="global";
         }
         await this.DataStore.deleteData(args.token, userId);
+        await this.Talker.sendResponse(`I have deleted ${args.token}`);
         return {status: "ok"};
     }
 
@@ -78,6 +79,7 @@ export class FunctionDispatcher {
             userId = "global";
         }
         await this.DataStore.storeData(args.token, userId, args.value);
+        await this.Talker.sendResponse(`I have stored ${args.token} as ${args.value}`);
         return {status: "ok"}
     }
 

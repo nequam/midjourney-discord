@@ -34,12 +34,13 @@ export class OpenAICommunicator {
             "function": fn // Assuming fn is already a correctly formatted object
         }));
 
+        // at some point, this need to be updated to page through all assistants.
 
         let myAssistant;
         try {
             const myAssistants = await this.openai.beta.assistants.list({
                 order: "desc",
-                limit: 20
+                limit: 30
             });
 
             // Find assistant by name
@@ -51,7 +52,7 @@ export class OpenAICommunicator {
                 // Check if instructions match
                 const instructionsMatch = (myAssistant.instructions?.trim() ?? "") === instructionsContent.trim();
                 // Check if tools match (you will need to define your own logic for matching functions and tools correctly)
-                const toolsMatch = JSON.stringify(myAssistant.tools.sort()) === JSON.stringify(Functions.sort());
+                const toolsMatch = JSON.stringify(myAssistant.tools.sort()) === JSON.stringify(formattedFunctions.sort());
                 if (!instructionsMatch || !toolsMatch) {
                     // Update the assistant
                     myAssistant = await this.openai.beta.assistants.update(myAssistant.id, {
@@ -192,7 +193,7 @@ export class OpenAICommunicator {
 
                         console.log("-", function_name, tool_args)
 
-                        let tool_output = dispatcher.Dispatch(function_name, tool_args)
+                        let tool_output = await dispatcher.Dispatch(function_name, tool_args)
 
                         tool_output_items.push({
                             tool_call_id: rtool.id,

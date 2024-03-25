@@ -64,7 +64,7 @@ export class MidjourneyBot extends Midjourney {
     if (!interaction.isChatInputCommand()) return;
     switch (interaction.commandName) {
       case "oh_imagine":
-        await this.ImagineCmd(interaction);
+        await this.FilterImageCmd(interaction);
         break;
       case "ai_imagine":
         await this.ImagineCmdAI(interaction);
@@ -116,40 +116,13 @@ async ImagineCmdAI(interaction: Interaction<CacheType>) {
     }
     this.log("prompt", prompt);
 
-    talker.sendResponse("Talking to another AI, please wait a moment...");
+    await talker.sendResponse("ai_imagine: "+ prompt);
 
-    const Prompt = await this.communicator.sendMessage(interaction.user.id.toString(), prompt, talker);
-
-    talker.sendResponse(Prompt);
-
-/*
-
-    this.log("prompt", newPrompt);
-
-   //await interaction.followUp("The old Prompt: " + prompt + "\nThe new prompt is " + newPrompt);
-
-  if (newPrompt!=prompt) {
-      const message = "The old Prompt: " + prompt + "\nThe new prompt is " + newPrompt;
-      const chunks = this.splitIntoChunks(message, 1500);
-
-      for (const chunk of chunks) {
-        await interaction.followUp(chunk);
-      }
-    } else {
-      await interaction.followUp("No Change");
+    const newPrompt = await this.communicator.sendMessage(interaction.user.id.toString(), prompt, talker);
+    if (!newPrompt.trim().toLowerCase().startsWith("any more instructions")) {
+      await talker.sendResponse(newPrompt);
     }
-    this.MJApi.config.ChannelId = interaction.channelId;
 
-    const httpStatus = await this.MJApi.ImagineApi(newPrompt);
-
-    if (httpStatus !== 204) {
-      await interaction.followUp("Request has failed; please try later");
-    } else {
-      await interaction.followUp(
-          "Your image is being prepared, please wait a moment..."
-      );
-    }
-    */
 }
   async sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -176,6 +149,26 @@ async AnalyzePrompt(prompt: string) {
   return await this.MJApi.ShortenApi(prompt);
   }
 
+  async FilterImageCmd(interaction: Interaction<CacheType>) {
+    if (!interaction.isChatInputCommand()) return;
+    const prompt = interaction.options.getString("prompt");
+    if (prompt === null) {
+      return;
+    }
+    const talker = new DiscordTalker(interaction,this);
+
+    await talker.sendResponse("oh_imagine" + prompt);
+
+    const instructions_prompt = "Do not alter this prompt at all.\n${prompt}";
+
+    const newPrompt = await this.communicator.sendMessage(interaction.user.id.toString(), instructions_prompt, talker);
+    if (!newPrompt.trim().toLowerCase().startsWith("any more instructions")) {
+      await talker.sendResponse(newPrompt);
+    }
+
+  }
+
+  /*
   async ImagineCmd(interaction: Interaction<CacheType>) {
     if (!interaction.isChatInputCommand()) return;
     const prompt = interaction.options.getString("prompt");
@@ -193,7 +186,7 @@ async AnalyzePrompt(prompt: string) {
       );
     }
   }
-
+*/
   async onReady() {
     let commands = await this.client.application?.commands.fetch();
     console.log(commands?.map(cmd => cmd.name));
