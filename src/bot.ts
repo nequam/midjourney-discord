@@ -157,9 +157,9 @@ async AnalyzePrompt(prompt: string) {
     }
     const talker = new DiscordTalker(interaction,this);
 
-    await talker.sendResponse("oh_imagine" + prompt);
+    await talker.sendResponse("oh_imagine: " + prompt);
 
-    const instructions_prompt = "Do not alter this prompt at all.\n${prompt}";
+    const instructions_prompt = `Do not alter this prompt at all.\n${prompt}`;
 
     const newPrompt = await this.communicator.sendMessage(interaction.user.id.toString(), instructions_prompt, talker);
     if (!newPrompt.trim().toLowerCase().startsWith("any more instructions")) {

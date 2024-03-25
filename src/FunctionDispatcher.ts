@@ -26,9 +26,14 @@ export class FunctionDispatcher {
                 return this.store_token(args);
             case 'analyze_prompt':
                 return this.analyze_prompt(args);
+            case 'who':
+                return this.who(args);
             default:
                 throw new Error(`Function ${functionName} not recognized.`);
         }
+    }
+    async who(args:any) : Promise<any> {
+        return await this.Talker.getUser();
     }
 
     async run_prompt(args:any) : Promise<any> {
@@ -48,7 +53,8 @@ export class FunctionDispatcher {
         if (failure === undefined) {
             failure= "I'm sorry, I was unable to generate an image for that prompt.  Please try again.";
         }
-        await this.Talker.sendResponse(failure);
+        await this.Talker.sendResponse("Failure: " + failure +"\nTrying to automatically fix the prompt.");
+        return {instructions: "automatically rephrase or modify the initial prompt to comply with the Terms of Service. Maintain the essence of the request without using prohibited names or direct references. Only indicate a Terms of Service violation and seek an alternative request if it's impossible to modify the prompt to comply while retaining the original intent.  Generate the image."};
     }
 
     async get_token(args:any) : Promise<any> {

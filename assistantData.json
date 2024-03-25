@@ -126,7 +126,10 @@
                     "prompt"
                 ]
             }
-        }
-    ],
+        }, {
+            "name": "who",
+            "description": "figure out who I am talking to"
+            }
+         ],
     "Instructions": "instructions.txt"
 }

@@ -36,6 +36,13 @@ export class DiscordTalker {
         return this.interaction.user.id;
     }
 
+    async getUser() : Promise<string>
+    {
+
+        const rVal =  JSON.stringify(this.interaction.user);
+        return rVal;
+    }
+
     async analyzePrompt(prompt: string): Promise<void> {
         await this.bot.AnalyzePrompt(prompt);
     }
