@@ -126,9 +126,10 @@
                     "prompt"
                 ]
             }
-        }, {
+        },
+        {
             "name": "who",
-            "description": "figure out who I am talking to"
+            "description": "figure out who I am talking to.  also returns a list of all available tokens."
             }
          ],
     "Instructions": "instructions.txt"

@@ -51,6 +51,19 @@ export class SQLiteDataStore implements IDataStore {
         return row ? row.threadId : null;
     }
 
+    async  getTokensForUserOrGlobal(userId: string): Promise<string[]> {
+        try {
+            const statement = `SELECT token FROM datastore WHERE user = ? OR user = 'global'`;
+            const tokens = await this.db.all(statement, userId); // Assuming 'this.db' is your SQLite database instance
+            return tokens.map(row => row.token);
+        } catch (error) {
+            console.error('An error occurred while retrieving tokens:', error);
+            return [];
+        }
+    }
+
+
+
     async getAllThreads(lastThreadId: string = "", pageSize: number = 10): Promise<string[]> {
         let statement = `SELECT threadId FROM threads WHERE active = ? `;
         const params :any[] = [true];

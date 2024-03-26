@@ -21,4 +21,6 @@ export interface IDataStore {
 
     deleteData(token: string, user: string): Promise<void>;
 
+    getTokensForUserOrGlobal(userId: string): Promise<string[]>;
+
 }

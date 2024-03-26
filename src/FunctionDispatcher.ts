@@ -33,7 +33,9 @@ export class FunctionDispatcher {
         }
     }
     async who(args:any) : Promise<any> {
-        return await this.Talker.getUser();
+        let user = await this.Talker.getUser();
+        let tokens = await this.DataStore.getTokensForUserOrGlobal(this.Talker.getUserId());
+        return {user: user, tokens: tokens}
     }
 
     async run_prompt(args:any) : Promise<any> {
